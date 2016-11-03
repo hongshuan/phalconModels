@@ -25,10 +25,7 @@ $di->set('db', function () {
         "username" => "root",
         "password" => "",
         "dbname"   => "test",
-        "options"  => [
-            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES 'UTF8'",
-            PDO::ATTR_CASE               => PDO::CASE_LOWER,
-        ]
+        "options"  => [ PDO::ATTR_CASE => PDO::CASE_LOWER ]
     ];
 
     $db = new \Phalcon\Db\Adapter\Pdo\Mysql($config);
@@ -42,17 +39,7 @@ $di->set('db', function () {
     $eventsManager->attach("db:beforeQuery",
         function (Event $event, $connection)  use ($logger) {
             $sql = $connection->getSQLStatement();
-
             $logger->log($sql, Logger::INFO);
-
-            // Check for malicious words in SQL statements
-            if (preg_match("/DROP|ALTER/i", $sql)) {
-                // DROP/ALTER operations aren't allowed in the application,
-                // this must be a SQL injection!
-                return false;
-            }
-
-            // It's OK
             return true;
         }
     );
@@ -62,15 +49,7 @@ $di->set('db', function () {
     return $db;
 });
 
-Model::setup([
-    "events"         => false,
-    "columnRenaming" => false,
-]);
-
-// Set a models manager
-$di->set("modelsManager", new ModelsManager());
-
-// Use the memory meta-data adapter or other
+$di->set("modelsManager",  new ModelsManager());
 $di->set("modelsMetadata", new MetaData());
 
 class Robots extends Model
@@ -78,31 +57,8 @@ class Robots extends Model
     public $id;
     public $name;
 
-    // Postgres Only
-    public function getSequenceName()
-    {
-        return "robots_sequence_name";
-    }
-
     public function initialize()
     {
-       #$this->keepSnapshots(true);
-       #$this->useDynamicUpdate(true);
-
-       #$this->setSource("toys_robot_parts");
-
-       #$this->setReadConnectionService("dbSlave");
-       #$this->setWriteConnectionService("dbMaster");
-
-        // Skips fields/columns on both INSERT/UPDATE operations
-       #$this->skipAttributes(["year", "price"]);
-
-        // Skips only when inserting
-       #$this->skipAttributesOnCreate(["created_at"]);
-
-        // Skips only when updating
-       #$this->skipAttributesOnUpdate(["modified_in"]);
-
         $this->hasMany("id", "RobotsParts", "robots_id");
 
        #$this->hasManyToMany(
@@ -143,56 +99,15 @@ class RobotsParts extends Model
 
 ########################################
 
-//echo Robots::count(), EOL;
-
-// Get a record from the database
-#$robot = Robots::findFirst('id=2');
-#echo $robot->name, ', ', $robot->year, ', ', $robot->type, EOL;
-
-#$robot = Robots::findFirst(2);
-#echo $robot->name, ', ', $robot->year, ', ', $robot->type, EOL;
-
-#$robots = Robots::find();
-#foreach ($robots as $robot) {
-#    echo $robot->name, ', ', $robot->year, ', ', $robot->type, EOL;
-#}
-
-#$robots = Robots::query()
-##   ->where("type = :type:")
-#    ->andWhere("year < 2015")
-##   ->bind(["type" => "type-1"])
-#    ->order("name")
-#    ->execute();
-#
-#foreach ($robots as $robot) {
-#    echo $robot->name, ', ', $robot->year, ', ', $robot->type, EOL;
-#}
-
-#$robot = Robots::findFirstByName('robot-3');
-#echo $robot->name, ', ', $robot->year, ', ', $robot->type, EOL;
-
-$robot = Robots::findFirst(2);
+$robot = Robots::findFirst("type='type-2'");
 
 foreach ($robot->robotsParts as $robotPart) {
-    echo $robot->name, ', ', $robotPart->parts->name, "\n";
+    echo $robot->name, ', ', $robotPart->parts->name, EOL;
 }
-
-#$robots->setHydrateMode(Resultset::HYDRATE_ARRAYS);  // Return every robot as an array
-#$robots->setHydrateMode(Resultset::HYDRATE_OBJECTS); // Return every robot as a stdClass
-#$robots->setHydrateMode(Resultset::HYDRATE_RECORDS); // Return every robot as a Robots instance
-
-#pr($robot->toArray());
-
-// Change a column
-//$robot->name = "Other name";
-//$robot->save();
-
-//pr($robot->getChangedFields()); // ["name"]
-//pr($robot->hasChanged("name")); // true
-//pr($robot->hasChanged("type")); // false
 
 ########################################
 
-//echo Parts::count(), EOL;
 $part = Parts::findFirst();
-#pr($part->toArray());
+foreach ($part->robotsParts as $robotPart) {
+    echo $part->name, ', ', $robotPart->parts->name, EOL;
+}
