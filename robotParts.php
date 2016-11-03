@@ -30,22 +30,6 @@ $di->set('db', function () {
 
     $db = new \Phalcon\Db\Adapter\Pdo\Mysql($config);
 
-    $eventsManager = new EventsManager();
-
-    $logger = new FileLogger("db.log");
-    $formatter = new FormatterLine('%date% [%type%] %message%', 'Y-m-d H:i:s');
-    $logger->setFormatter($formatter);
-
-    $eventsManager->attach("db:beforeQuery",
-        function (Event $event, $connection)  use ($logger) {
-            $sql = $connection->getSQLStatement();
-            $logger->log($sql, Logger::INFO);
-            return true;
-        }
-    );
-
-    $db->setEventsManager($eventsManager);
-
     return $db;
 });
 
@@ -101,13 +85,19 @@ class RobotsParts extends Model
 
 $robot = Robots::findFirst("type='type-2'");
 
-foreach ($robot->robotsParts as $robotPart) {
-    echo $robot->name, ', ', $robotPart->parts->name, EOL;
+$robots = Robots::find();
+
+foreach ($robots as $robot) {
+    echo $robot->name, ': ';
+    foreach ($robot->robotsParts as $robotPart) {
+        echo $robotPart->parts->name, ' ';
+    }
+    echo EOL;
 }
 
 ########################################
 
-$part = Parts::findFirst();
-foreach ($part->robotsParts as $robotPart) {
-    echo $part->name, ', ', $robotPart->parts->name, EOL;
-}
+#$part = Parts::findFirst();
+#foreach ($part->robotsParts as $robotPart) {
+#    echo $part->name, ', ', $robotPart->parts->name, EOL;
+#}
