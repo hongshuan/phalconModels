@@ -1,33 +1,6 @@
 <?php
 
-use Phalcon\Di;
-
 use Phalcon\Mvc\Model;
-use Phalcon\Mvc\Model\Manager as ModelsManager;
-use Phalcon\Mvc\Model\Metadata\Memory as MetaData;
-
-const EOL = PHP_EOL;
-
-function pr($var) { var_export($var); echo EOL; }
-
-$di = new Di();
-
-$di->set('db', function () {
-    $config = [
-        "host"     => "127.0.0.1",
-        "username" => "root",
-        "password" => "",
-        "dbname"   => "test",
-        "options"  => [ PDO::ATTR_CASE => PDO::CASE_LOWER ]
-    ];
-
-    $db = new \Phalcon\Db\Adapter\Pdo\Mysql($config);
-
-    return $db;
-});
-
-$di->set("modelsManager",  new ModelsManager());
-$di->set("modelsMetadata", new MetaData());
 
 class Orders extends Model
 {
@@ -68,6 +41,8 @@ class OrderShippingAddress extends Model
 }
 
 ########################################
+
+include 'init.php';
 
 $orders = Orders::find();
 
