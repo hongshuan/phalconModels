@@ -35,3 +35,55 @@ $di->set('db', function () {
 
 $di->set("modelsManager",  new ModelsManager());
 $di->set("modelsMetadata", new MetaData());
+
+function genInsertSql($table, $columns, $data)
+{
+    $columnList = '`' . implode('`, `', $columns) . '`';
+
+    $query = "INSERT INTO `$table` ($columnList) VALUES\n";
+
+    $values = array();
+
+    foreach($data as $row) {
+        foreach($row as &$val) {
+            $val = addslashes($val);
+        }
+        $values[] = "('" . implode("', '", $row). "')";
+    }
+
+    $update = implode(', ',
+        array_map(function($name) {
+            return "`$name`=VALUES(`$name`)";
+        }, $columns)
+    );
+
+    return $query . implode(",\n", $values);
+#   return $query . implode(",\n", $values) . "\nON DUPLICATE KEY UPDATE " . $update . ';';
+}
+
+function &timer_fetch()
+{
+    static $timers = [ '__names__' => [] ];
+    return $timers;
+}
+
+function timer_start($name)
+{
+    $timers = &timer_fetch();
+    array_push($timers['__names__'], $name);
+    $timers[$name] = microtime(true);
+}
+
+function timer_end($name = null)
+{
+    $timers = &timer_fetch();
+    if (!$name) {
+        $name = array_pop($timers['__names__']);
+    } else {
+        $key = array_search($name, $timers['__names__']);
+        unset($timers['__names__'][$key]);
+    }
+    $start = $timers[$name];
+    $end = microtime(true);
+    $timers[$name] = number_format($end - $start, 3);
+}
